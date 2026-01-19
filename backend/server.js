@@ -187,6 +187,10 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Sesión cerrada' });
 });
 
+app.get('/api/auth/check', requireAdmin, (req, res) => {
+  res.json({ authenticated: true, user: 'admin' });
+});
+
 // Middleware aplicado a rutas sensibles
 app.use('/dashboard', requireAdmin);
 app.use('/partner', requireAdmin);

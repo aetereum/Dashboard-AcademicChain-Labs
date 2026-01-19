@@ -11,7 +11,19 @@ import Metrics from "./pages/Metrics.jsx";
 import Layout from "./components/layout/Layout.jsx";
 
 function PrivateRoute({ children }) {
-  const { apiKey } = useApi();
+  const { apiKey, isSessionChecking } = useApi();
+  
+  if (isSessionChecking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-400">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-800 border-t-brand-500"></div>
+          <p className="text-xs font-medium">Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!apiKey) {
     return <Navigate to="/login" replace />;
   }
