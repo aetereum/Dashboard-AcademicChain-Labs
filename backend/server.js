@@ -62,7 +62,7 @@ const db = {
       status: "active",
       plan: "Enterprise",
       emissions: 420,
-      credits: 1000, // Créditos iniciales
+      credits: 1000,
       verifications: 1500,
       createdAt: new Date().toISOString()
     },
@@ -73,14 +73,60 @@ const db = {
       status: "active",
       plan: "Startup",
       emissions: 210,
-      credits: 50, // Créditos bajos para probar límite
+      credits: 50,
       verifications: 800,
+      createdAt: new Date().toISOString()
+    },
+    // Nuevas instituciones pre-cargadas
+    {
+      id: "inst-seq-test",
+      name: "Sequential Test Uni",
+      slug: "sequential-test-uni",
+      status: "active",
+      plan: "Enterprise",
+      emissions: 10,
+      credits: 500,
+      verifications: 5,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: "inst-demo",
+      name: "Demo University",
+      slug: "demo-university",
+      status: "active",
+      plan: "Startup",
+      emissions: 5,
+      credits: 100,
+      verifications: 2,
       createdAt: new Date().toISOString()
     }
   ],
   apiKeys: [],
   logs: []
 };
+
+// Pre-cargar API Keys proporcionadas por el usuario
+const PRELOADED_KEYS = [
+  { key: 'acp_e2f7e760_6738054b0eb943c8a33fd9c52263a62e', name: 'Dashboard Admin', role: 'admin', institutionId: 'admin' },
+  { key: 'acp_8ba28e18_5968e84e0579411bbae50897f9c4d447', name: 'Sequential Test Uni Key', role: 'institution_admin', institutionId: 'inst-seq-test' },
+  { key: 'acp_9fc2f1c2_b098fd13d755451c9b54cb44d430a0a0', name: 'Demo University Key', role: 'institution_admin', institutionId: 'inst-demo' }
+];
+
+PRELOADED_KEYS.forEach(pk => {
+  const hash = crypto.createHash('sha256').update(pk.key).digest('hex');
+  db.apiKeys.push({
+    id: crypto.randomUUID(),
+    institutionId: pk.institutionId,
+    name: pk.name,
+    role: pk.role,
+    keyPrefix: pk.key.substring(0, 8),
+    keyHash: hash,
+    status: true,
+    createdAt: new Date().toISOString(),
+    lastUsed: null
+  });
+});
+
 
 const ADMIN_USER = process.env.ADMIN_USER;
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2a$10$X7.p8F/X9.Y.Z.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8'; // Default hash if needed, but better to enforce env
