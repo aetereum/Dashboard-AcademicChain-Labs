@@ -126,22 +126,28 @@ export default function Institutions() {
     setCreateModalOpen(true);
   }
 
-  function handleCreateInstitution(e) {
+  async function handleCreateInstitution(e) {
     e.preventDefault();
-    // Simulate creation for now as backend endpoint might vary
-    const id = `inst-${Date.now()}`;
-    const next = {
-      id,
-      name: instDraft.name,
-      slug: instDraft.slug || instDraft.name.toLowerCase().replace(/\s+/g, "-"),
-      tokenId: instDraft.tokenId || "0.0.000000",
-      plan: instDraft.plan,
-      emissions: 0,
-      verifications: 0,
-      status: "Activa",
-    };
-    setRows([next, ...rows]);
-    setCreateModalOpen(false);
+    try {
+      if (!service.createInstitution) {
+        throw new Error("Servicio no disponible");
+      }
+      
+      const newInst = await service.createInstitution({
+        name: instDraft.name,
+        slug: instDraft.slug,
+        plan: instDraft.plan
+      });
+
+      setRows([newInst, ...rows]);
+      setCreateModalOpen(false);
+      // Reset draft
+      setInstDraft({ name: "", slug: "", tokenId: "", plan: "Startup" });
+      alert("Institución creada exitosamente. Ahora puedes generarle llaves.");
+    } catch (err) {
+      console.error(err);
+      alert("Error al crear institución: " + err.message);
+    }
   }
 
   // API Key Creation Flow

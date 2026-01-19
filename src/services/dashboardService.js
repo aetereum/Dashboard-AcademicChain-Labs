@@ -23,6 +23,11 @@ export function buildDashboardService({ baseUrl, apiKey }) {
     return data;
   }
 
+  async function createInstitution(payload) {
+    const { data } = await client.post("/partner/institutions", payload);
+    return data;
+  }
+
   async function getApiKeys() {
     const { data } = await client.get("/partner/api-keys");
     return data;
