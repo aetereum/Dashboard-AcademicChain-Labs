@@ -44,6 +44,15 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Endpoint de estado para verificar conexión (Health Check)
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'online', 
+    server: 'AcademicChain Dashboard Backend',
+    timestamp: new Date().toISOString() 
+  });
+});
+
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -162,9 +171,9 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     
     res.cookie('admin_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Solo https en prod
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 horas
+      secure: true, // Siempre secure para cookies cross-site
+      sameSite: 'none', // Necesario para cookies entre dominios (Frontend Local -> Backend Render)
+      maxAge: 24 * 60 * 60 * 1000
     });
     
     return res.json({ success: true, message: 'Login exitoso' });

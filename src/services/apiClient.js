@@ -4,6 +4,7 @@ import { toast } from "../utils/toast.js";
 export function createApiClient({ baseUrl, apiKey }) {
   const instance = axios.create({
     baseURL: baseUrl,
+    withCredentials: true, // IMPORTANT: Enviar cookies en requests cross-origin
     headers: {
       "Content-Type": "application/json",
       "X-API-Key": apiKey || "",

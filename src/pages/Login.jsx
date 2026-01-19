@@ -9,7 +9,23 @@ export default function Login() {
   );
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(null); // null, 'checking', 'connected', 'error'
   const navigate = useNavigate();
+
+  // Verificar conexión al cargar o cambiar URL
+  const checkConnection = async (url) => {
+    setConnectionStatus('checking');
+    try {
+      const res = await fetch(`${url.replace(/\/$/, "")}/api/health`);
+      if (res.ok) {
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('error');
+      }
+    } catch (e) {
+      setConnectionStatus('error');
+    }
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -21,10 +37,12 @@ export default function Login() {
 
     try {
       // 2. Login directo para obtener cookie HttpOnly
+      // IMPORTANT: credentials: 'include' es vital para recibir cookies cross-site
       const response = await fetch(`${finalUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ password }),
+        credentials: 'include' 
       });
 
       const data = await response.json();
@@ -74,17 +92,29 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-400">
+                <label className="text-xs font-medium text-slate-400 flex justify-between">
                   Backend URL
+                  {connectionStatus === 'checking' && <span className="text-yellow-500">Conectando...</span>}
+                  {connectionStatus === 'connected' && <span className="text-emerald-500">En línea ●</span>}
+                  {connectionStatus === 'error' && <span className="text-rose-500">Sin conexión ●</span>}
                 </label>
-                <input
-                  type="url"
-                  required
-                  value={urlValue}
-                  onChange={(e) => setUrlValue(e.target.value)}
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:border-brand-500/50 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
-                  placeholder="http://localhost:3001"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    required
+                    value={urlValue}
+                    onChange={(e) => setUrlValue(e.target.value)}
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:border-brand-500/50 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
+                    placeholder="http://localhost:3001"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => checkConnection(urlValue)}
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition-colors"
+                  >
+                    Test
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-1.5">

@@ -13,7 +13,7 @@ const validateDashboardKey = async (req, res, next) => {
         const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex'); 
 
         // Consultamos al Backend del Dashboard en Render 
-        const dashboardUrl = process.env.DASHBOARD_API_URL || 'http://localhost:3001';
+        const dashboardUrl = process.env.DASHBOARD_API_URL || 'https://dashboard-academicchain-labs.onrender.com';
         
         const response = await axios.post(`${dashboardUrl}/api/validate`, { 
             hash: keyHash, 
