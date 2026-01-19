@@ -85,6 +85,32 @@ export default function Institutions() {
     });
   }
 
+  // Handle credits
+  async function handleUpdateCredits(id, amount) {
+      if (!service.updateInstitutionCredits) {
+          // Fallback local if service not ready (should not happen in prod)
+           const inst = rows.find(r => r.id === id);
+           if (inst) {
+               inst.credits = (inst.credits || 0) + amount;
+               setRows([...rows]); // Force re-render
+           }
+          return;
+      }
+      try {
+          const res = await service.updateInstitutionCredits(id, amount);
+          if (res.success) {
+              // Update local state
+               setRows(rows.map(r => r.id === id ? { ...r, credits: res.credits } : r));
+               if (selectedInst && selectedInst.id === id) {
+                   setSelectedInst({ ...selectedInst, credits: res.credits });
+               }
+          }
+      } catch (err) {
+          console.error("Error updating credits", err);
+          alert("Error al actualizar créditos");
+      }
+  }
+
   // Institution Creation
   function handleOpenCreateModal() {
     setInstDraft({ name: "", slug: "", tokenId: "", plan: "Startup" });
@@ -282,24 +308,44 @@ export default function Institutions() {
 
             {/* Emission Control */}
             <div className="space-y-3 rounded-xl border border-slate-800 p-4">
-              <h4 className="text-xs font-medium text-slate-300">Control de Emisiones</h4>
+              <h4 className="text-xs font-medium text-slate-300">Gestión de Créditos (Saldo)</h4>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500">Límite Mensual</span>
-                <span className="text-sm font-mono text-brand-200">{(limits[selectedInst.id] || 0).toLocaleString()}</span>
+                <span className="text-xs text-slate-500">Créditos Disponibles</span>
+                <span className="text-sm font-mono text-brand-200">{(selectedInst.credits || 0).toLocaleString()}</span>
               </div>
               <div className="flex gap-2">
                 <button 
-                  onClick={() => updateLimit(selectedInst.id, -100)}
+                  onClick={() => handleUpdateCredits(selectedInst.id, -10)}
                   className="flex-1 rounded-lg border border-slate-700 bg-slate-800/50 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
                 >
-                  -100
+                  -10
                 </button>
                 <button 
-                  onClick={() => updateLimit(selectedInst.id, 100)}
+                  onClick={() => handleUpdateCredits(selectedInst.id, 50)}
                   className="flex-1 rounded-lg border border-slate-700 bg-slate-800/50 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
                 >
-                  +100
+                  +50
                 </button>
+              </div>
+              <div className="pt-2 border-t border-slate-800/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-500">Límite Mensual (Local)</span>
+                    <span className="text-xs font-mono text-slate-400">{(limits[selectedInst.id] || 0).toLocaleString()}</span>
+                  </div>
+                   <div className="flex gap-2">
+                    <button 
+                      onClick={() => updateLimit(selectedInst.id, -100)}
+                      className="flex-1 rounded-lg border border-slate-700 bg-slate-800/30 py-1 text-[10px] text-slate-400 hover:bg-slate-800"
+                    >
+                      -100
+                    </button>
+                    <button 
+                      onClick={() => updateLimit(selectedInst.id, 100)}
+                      className="flex-1 rounded-lg border border-slate-700 bg-slate-800/30 py-1 text-[10px] text-slate-400 hover:bg-slate-800"
+                    >
+                      +100
+                    </button>
+                  </div>
               </div>
             </div>
 

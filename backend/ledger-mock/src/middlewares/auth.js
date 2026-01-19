@@ -21,9 +21,17 @@ const validateDashboardKey = async (req, res, next) => {
         }); 
 
         if (response.data.valid) { 
-            req.institution = response.data.institution; // Guardamos el nombre de la institución 
+            req.institution = response.data.institution; // Guardamos el nombre de la institución
+            // Opcional: mostrar créditos restantes en logs del ledger
+            if (response.data.remainingCredits !== undefined) {
+                console.log(`[Guardian] Créditos restantes para ${req.institution}: ${response.data.remainingCredits}`);
+            }
             next(); 
         } else { 
+            // Manejo de error específico por créditos
+            if (response.data.message && response.data.message.includes('Créditos')) {
+                 return res.status(402).json({ message: response.data.message }); // 402 Payment Required
+            }
             res.status(403).json({ message: "API Key inválida o revocada" }); 
         } 
     } catch (error) { 

@@ -80,6 +80,12 @@ export function buildDashboardService({ baseUrl, apiKey }) {
     return data;
   }
 
+  async function updateInstitutionCredits(id, amount) {
+      // amount can be negative
+      const { data } = await client.post(`/partner/institutions/${id}/credits`, { amount, action: 'add' });
+      return data;
+  }
+
   return {
     getOverview,
     getInstitutions,
@@ -95,5 +101,6 @@ export function buildDashboardService({ baseUrl, apiKey }) {
     revokeCredential,
     getRevocations,
     getLogs,
+    updateInstitutionCredits,
   };
 }

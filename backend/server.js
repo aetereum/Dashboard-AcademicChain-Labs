@@ -40,6 +40,7 @@ const db = {
       status: "active",
       plan: "Enterprise",
       emissions: 420,
+      credits: 1000, // Créditos iniciales
       verifications: 1500,
       createdAt: new Date().toISOString()
     },
@@ -50,6 +51,7 @@ const db = {
       status: "active",
       plan: "Startup",
       emissions: 210,
+      credits: 50, // Créditos bajos para probar límite
       verifications: 800,
       createdAt: new Date().toISOString()
     }
@@ -225,11 +227,35 @@ app.post('/partner/institutions', (req, res) => {
     status: 'active',
     plan: plan || 'Startup',
     emissions: 0,
+    credits: 0, // Default 0 credits
     verifications: 0,
     createdAt: new Date().toISOString()
   };
   db.institutions.push(newInst);
   res.json(newInst);
+});
+
+// Update Institution Credits
+app.post('/partner/institutions/:id/credits', (req, res) => {
+  const { id } = req.params;
+  const { amount, action } = req.body; // action: 'add' or 'set'
+
+  const inst = db.institutions.find(i => i.id === id);
+  if (!inst) return res.status(404).json({ message: "Institución no encontrada" });
+
+  const val = parseInt(amount, 10);
+  if (isNaN(val)) return res.status(400).json({ message: "Cantidad inválida" });
+
+  if (action === 'add') {
+    inst.credits = (inst.credits || 0) + val;
+  } else if (action === 'set') {
+    inst.credits = val;
+  } else {
+    // Default to add if not specified, or just set? Let's assume 'set' for direct input
+    inst.credits = val;
+  }
+
+  res.json({ success: true, credits: inst.credits });
 });
 
 app.get('/partner/institutions/:id', (req, res) => {
@@ -330,12 +356,28 @@ app.post('/api/validate', (req, res) => {
 
     // Increment emissions if it's an emission endpoint (simulation)
     if (endpoint && endpoint.includes('emissions') && inst) {
+      // Validar Créditos
+      if (inst.credits <= 0) {
+          const failedLog = {
+            id: crypto.randomUUID(),
+            institutionId: key.institutionId,
+            endpoint: endpoint || "",
+            status: "failed_no_credits",
+            timestamp: now
+          };
+          db.logs.push(failedLog);
+          return res.json({ valid: false, message: "Créditos agotados. Saldo insuficiente para emitir títulos." });
+      }
+
+      // Si es válido, descontamos 1 crédito automáticamente
+      inst.credits = (inst.credits || 0) - 1;
       inst.emissions = (inst.emissions || 0) + 1;
     }
 
     return res.json({
       valid: true,
-      institution: inst ? inst.name : null
+      institution: inst ? inst.name : null,
+      remainingCredits: inst ? inst.credits : 0
     });
   }
 
