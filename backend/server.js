@@ -435,8 +435,16 @@ app.post('/api/validate', (req, res) => {
     const inst = db.institutions.find(i => i.id === key.institutionId);
 
     // Increment emissions if it's an emission endpoint (simulation)
-    if (endpoint && endpoint.includes('emissions') && inst) {
-      // Validar Créditos
+    // O si la operación se marca explícitamente como 'blockchain_issuance' (como sugerido en la guía)
+    const isIssuance = (endpoint && (endpoint.includes('emissions') || endpoint.includes('mint'))) || req.body.operation === 'blockchain_issuance';
+
+    if (isIssuance && inst) {
+      // 1. Validar estado de la institución (Pánico/Bloqueo)
+      if (inst.status === 'blocked' || inst.status === 'revoked') {
+          return res.json({ valid: false, message: "Institución bloqueada por seguridad (Acceso Revocado)" });
+      }
+
+      // 2. Validar Créditos
       if (inst.credits <= 0) {
           const failedLog = {
             id: crypto.randomUUID(),
@@ -446,12 +454,15 @@ app.post('/api/validate', (req, res) => {
             timestamp: now
           };
           db.logs.push(failedLog);
-          return res.json({ valid: false, message: "Créditos agotados. Saldo insuficiente para emitir títulos." });
+          return res.json({ valid: false, message: "Créditos agotados. Contacte a soporte para recargar." });
       }
 
-      // Si es válido, descontamos 1 crédito automáticamente
+      // 3. Descontar y registrar
       inst.credits = (inst.credits || 0) - 1;
       inst.emissions = (inst.emissions || 0) + 1;
+      
+      // Actualizar log a 'success_issuance' para diferenciar
+      logEntry.status = "success_issuance";
     }
 
     return res.json({
