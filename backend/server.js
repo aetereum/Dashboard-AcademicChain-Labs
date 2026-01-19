@@ -311,6 +311,11 @@ app.post('/api/validate', (req, res) => {
   const now = new Date().toISOString();
 
   if (key) {
+    // Check expiration if exists
+    if (key.expiresAt && new Date(key.expiresAt) < new Date()) {
+       return res.json({ valid: false, message: "Llave expirada" });
+    }
+
     key.lastUsed = now;
     const logEntry = {
       id: crypto.randomUUID(),
@@ -322,6 +327,11 @@ app.post('/api/validate', (req, res) => {
     db.logs.push(logEntry);
 
     const inst = db.institutions.find(i => i.id === key.institutionId);
+
+    // Increment emissions if it's an emission endpoint (simulation)
+    if (endpoint && endpoint.includes('emissions') && inst) {
+      inst.emissions = (inst.emissions || 0) + 1;
+    }
 
     return res.json({
       valid: true,
