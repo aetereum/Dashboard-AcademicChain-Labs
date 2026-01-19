@@ -3,6 +3,16 @@ import { createApiClient } from "./apiClient.js";
 export function buildDashboardService({ baseUrl, apiKey }) {
   const client = createApiClient({ baseUrl, apiKey });
 
+  async function login(password) {
+    const { data } = await client.post("/api/auth/login", { password });
+    return data;
+  }
+
+  async function logout() {
+    const { data } = await client.post("/api/auth/logout");
+    return data;
+  }
+
   async function getOverview() {
     const { data } = await client.get("/dashboard/overview");
     return data;
@@ -102,5 +112,7 @@ export function buildDashboardService({ baseUrl, apiKey }) {
     getRevocations,
     getLogs,
     updateInstitutionCredits,
+    login,
+    logout
   };
 }

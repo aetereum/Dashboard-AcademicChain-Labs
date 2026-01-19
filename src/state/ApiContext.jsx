@@ -5,7 +5,7 @@ const ApiContext = createContext(null);
 
 export function ApiProvider({ children }) {
   const [apiKey, setApiKey] = useState(
-    () => localStorage.getItem("ac_api_key") || "acp_3fa9c2ab_0c2a3d4e5f6g7h8i9j0k"
+    () => localStorage.getItem("ac_api_key") || null
   );
   const [baseUrl, setBaseUrl] = useState(
     () =>

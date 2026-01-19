@@ -3,18 +3,45 @@ import { useNavigate } from "react-router-dom";
 import { useApi } from "../state/ApiContext.jsx";
 
 export default function Login() {
-  const { apiKey, baseUrl, setApiKey, setBaseUrl } = useApi();
+  const { setApiKey, setBaseUrl } = useApi();
   const [urlValue, setUrlValue] = useState(
-    "https://academicchain-ledger.onrender.com"
+    "https://dashboard-academicchain-labs.onrender.com"
   );
-  const [keyValue, setKeyValue] = useState("acp_3fa9c2ab_0c2a3d4e5f6g7h8i9j0k");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setApiKey(keyValue.trim());
-    setBaseUrl(urlValue.trim());
-    navigate("/");
+    setLoading(true);
+    
+    // 1. Configurar Base URL
+    const finalUrl = urlValue.replace(/\/$/, ""); 
+    setBaseUrl(finalUrl);
+
+    try {
+      // 2. Login directo para obtener cookie HttpOnly
+      const response = await fetch(`${finalUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // 3. Login exitoso
+        setApiKey("admin-session-active"); // Flag para el frontend
+        navigate("/");
+      } else {
+        alert(data.message || "Error al iniciar sesión");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo conectar con el backend. Verifica la URL.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -32,59 +59,56 @@ export default function Login() {
                 Dashboard de emisiones académicas
               </h1>
               <p className="text-sm text-slate-300">
-                Conecta la API de AcademicChain Labs y controla, en un solo lugar, qué
-                universidades emiten qué credenciales, con métricas en tiempo real.
+                Acceso restringido para administradores y partners autorizados.
+                Gestión centralizada de llaves, instituciones y emisiones.
               </p>
-              <ul className="space-y-2 text-sm text-slate-300">
-                <li>• Segmentación por institución, token académico y plan.</li>
-                <li>• Visibilidad de emisiones, verificaciones y revocaciones.</li>
-                <li>• Panel pensado para CTOs, compliance y partners enterprise.</li>
-              </ul>
             </div>
           </div>
           <div className="glass-panel p-8">
             <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Conectar instancia
+              Acceso Administrativo
             </h2>
             <p className="mt-1 text-sm text-slate-300">
-              Introduce la URL de tu backend y la API key con permisos de partner.
+              Ingresa tus credenciales de administrador.
             </p>
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <div className="space-y-1.5 text-sm">
-                <label className="text-xs font-medium text-slate-200">
-                  URL base de la API
+
+            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-400">
+                  Backend URL
                 </label>
                 <input
                   type="url"
                   required
                   value={urlValue}
                   onChange={(e) => setUrlValue(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none ring-brand-500/40 placeholder:text-slate-500 focus:border-brand-400 focus:ring-2"
-                  placeholder="https://academicchain-ledger.onrender.com/api"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:border-brand-500/50 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
+                  placeholder="http://localhost:3001"
                 />
               </div>
-              <div className="space-y-1.5 text-sm">
-                <label className="text-xs font-medium text-slate-200">API key</label>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-400">
+                  Contraseña Admin
+                </label>
                 <input
                   type="password"
                   required
-                  value={keyValue}
-                  onChange={(e) => setKeyValue(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none ring-brand-500/40 placeholder:text-slate-500 focus:border-brand-400 focus:ring-2"
-                  placeholder="acp_xxxxxxxxx"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:border-brand-500/50 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
+                  placeholder="••••••••"
                 />
               </div>
+
               <button
                 type="submit"
-                className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-slate-950 transition hover:bg-brand-400"
+                disabled={loading}
+                className="btn-primary w-full justify-center"
               >
-                Entrar al panel
+                {loading ? "Conectando..." : "Iniciar Sesión"}
               </button>
             </form>
-            <p className="mt-4 text-[11px] leading-relaxed text-slate-500">
-              Tus credenciales se almacenan solo en tu navegador. Este dashboard actúa como
-              un cliente sobre la API multi-institución de AcademicChain Labs.
-            </p>
           </div>
         </div>
       </div>

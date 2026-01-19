@@ -86,29 +86,38 @@ export default function Institutions() {
   }
 
   // Handle credits
+  const [creditsAmount, setCreditsAmount] = useState(100);
+  const activeSelectedInst = useMemo(() => rows.find(r => r.id === selectedInst?.id), [rows, selectedInst]);
+
   async function handleUpdateCredits(id, amount) {
-      if (!service.updateInstitutionCredits) {
-          // Fallback local if service not ready (should not happen in prod)
-           const inst = rows.find(r => r.id === id);
-           if (inst) {
-               inst.credits = (inst.credits || 0) + amount;
-               setRows([...rows]); // Force re-render
-           }
-          return;
-      }
+      if (!service.updateInstitutionCredits) return;
       try {
           const res = await service.updateInstitutionCredits(id, amount);
           if (res.success) {
-              // Update local state
                setRows(rows.map(r => r.id === id ? { ...r, credits: res.credits } : r));
-               if (selectedInst && selectedInst.id === id) {
-                   setSelectedInst({ ...selectedInst, credits: res.credits });
+               // Update selectedInst if it's the one being modified
+               if (selectedInst?.id === id) {
+                   setSelectedInst(prev => ({ ...prev, credits: res.credits }));
                }
           }
       } catch (err) {
           console.error("Error updating credits", err);
           alert("Error al actualizar créditos");
       }
+  }
+
+  async function handlePanic(id) {
+    if (!confirm("⚠️ ¿ESTÁS SEGURO? \n\nEsto revocará inmediatamente la capacidad de emitir credenciales para esta institución (Créditos = 0).")) return;
+    
+    const inst = rows.find(r => r.id === id);
+    if (!inst) return;
+    
+    // Set credits to 0 by subtracting current credits
+    const currentCredits = inst.credits || 0;
+    if (currentCredits > 0) {
+        await handleUpdateCredits(id, -currentCredits);
+    }
+    alert("Protocolo de pánico activado. La institución ha sido detenida.");
   }
 
   // Institution Creation
@@ -212,7 +221,7 @@ export default function Institutions() {
                 <th className="px-4 py-3 text-left">Estado</th>
                 <th className="px-4 py-3 text-right">Llaves</th>
                 <th className="px-4 py-3 text-right">Emisiones</th>
-                <th className="px-4 py-3 text-right">Límite</th>
+                <th className="px-4 py-3 text-right">Créditos</th>
                 <th className="px-4 py-3 text-right"></th>
               </tr>
             </thead>
@@ -311,42 +320,48 @@ export default function Institutions() {
               <h4 className="text-xs font-medium text-slate-300">Gestión de Créditos (Saldo)</h4>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-500">Créditos Disponibles</span>
-                <span className="text-sm font-mono text-brand-200">{(selectedInst.credits || 0).toLocaleString()}</span>
+                <span className="text-lg font-mono font-bold text-emerald-400">
+                  {(activeSelectedInst?.credits || 0).toLocaleString()}
+                </span>
               </div>
-              <div className="flex gap-2">
+              
+              <div className="flex gap-2 pt-2">
+                <input 
+                  type="number" 
+                  value={creditsAmount}
+                  onChange={(e) => setCreditsAmount(Number(e.target.value))}
+                  className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-center text-xs text-slate-200 focus:border-brand-500/50 focus:outline-none"
+                />
                 <button 
-                  onClick={() => handleUpdateCredits(selectedInst.id, -10)}
-                  className="flex-1 rounded-lg border border-slate-700 bg-slate-800/50 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
+                  onClick={() => handleUpdateCredits(selectedInst.id, -creditsAmount)}
+                  className="flex-1 rounded-lg border border-red-900/30 bg-red-950/20 py-1.5 text-xs text-red-400 hover:bg-red-900/40"
                 >
-                  -10
+                  -{creditsAmount}
                 </button>
                 <button 
-                  onClick={() => handleUpdateCredits(selectedInst.id, 50)}
-                  className="flex-1 rounded-lg border border-slate-700 bg-slate-800/50 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
+                  onClick={() => handleUpdateCredits(selectedInst.id, creditsAmount)}
+                  className="flex-1 rounded-lg border border-emerald-900/30 bg-emerald-950/20 py-1.5 text-xs text-emerald-400 hover:bg-emerald-900/40"
                 >
-                  +50
+                  +{creditsAmount}
                 </button>
               </div>
-              <div className="pt-2 border-t border-slate-800/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-500">Límite Mensual (Local)</span>
-                    <span className="text-xs font-mono text-slate-400">{(limits[selectedInst.id] || 0).toLocaleString()}</span>
-                  </div>
-                   <div className="flex gap-2">
-                    <button 
-                      onClick={() => updateLimit(selectedInst.id, -100)}
-                      className="flex-1 rounded-lg border border-slate-700 bg-slate-800/30 py-1 text-[10px] text-slate-400 hover:bg-slate-800"
-                    >
-                      -100
-                    </button>
-                    <button 
-                      onClick={() => updateLimit(selectedInst.id, 100)}
-                      className="flex-1 rounded-lg border border-slate-700 bg-slate-800/30 py-1 text-[10px] text-slate-400 hover:bg-slate-800"
-                    >
-                      +100
-                    </button>
-                  </div>
-              </div>
+            </div>
+
+            {/* Panic Button */}
+            <div className="rounded-xl border border-red-900/20 bg-red-950/10 p-4">
+               <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-red-400">Zona de Peligro</span>
+                  <Activity className="h-4 w-4 text-red-500" />
+               </div>
+               <button 
+                 onClick={() => handlePanic(selectedInst.id)}
+                 className="mt-3 w-full rounded-lg bg-red-600 py-2 text-xs font-bold text-white hover:bg-red-500 transition shadow-lg shadow-red-900/20"
+               >
+                 BOTÓN DE PÁNICO (Revocar Todo)
+               </button>
+               <p className="mt-2 text-[10px] text-red-300/60 leading-tight">
+                 Esto establecerá los créditos a 0 inmediatamente, deteniendo cualquier emisión en curso de esta institución.
+               </p>
             </div>
 
             {/* API Keys Section */}
