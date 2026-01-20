@@ -13,11 +13,15 @@ const validateDashboardKey = async (req, res, next) => {
         const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex'); 
 
         // Consultamos al Backend del Dashboard en Render 
+        // CAMBIO: Aseguramos que la URL sea la de producción si no hay variable de entorno
         const dashboardUrl = process.env.DASHBOARD_API_URL || 'https://dashboard-academicchain-labs.onrender.com';
         
+        console.log(`[Guardian] Conectando con Dashboard en: ${dashboardUrl}`);
+
         const response = await axios.post(`${dashboardUrl}/api/validate`, { 
             hash: keyHash, 
-            endpoint: req.originalUrl 
+            endpoint: req.originalUrl,
+            operation: 'blockchain_issuance' // Marcamos explícitamente la operación
         }); 
 
         if (response.data.valid) { 
