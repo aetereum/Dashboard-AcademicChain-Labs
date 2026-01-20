@@ -44,8 +44,8 @@ export default function Layout() {
                     [
                       "flex items-center gap-3 rounded-xl px-3 py-2 transition-colors",
                       isActive
-                        ? "bg-brand-500/15 text-brand-200"
-                        : "text-slate-300 hover:bg-slate-800/80 hover:text-slate-100",
+                        ? "bg-brand-500/20 text-brand-100 font-medium"
+                        : "text-slate-200 hover:bg-slate-800/80 hover:text-white",
                     ].join(" ")
                   }
                 >

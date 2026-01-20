@@ -89,6 +89,25 @@ export default function Institutions() {
   const [creditsAmount, setCreditsAmount] = useState(100);
   const activeSelectedInst = useMemo(() => rows.find(r => r.id === selectedInst?.id), [rows, selectedInst]);
 
+  const [instCredentials, setInstCredentials] = useState([]);
+  const [loadingCreds, setLoadingCreds] = useState(false);
+
+  useEffect(() => {
+    if (selectedInst?.id) {
+        setLoadingCreds(true);
+        fetch(`${baseUrl}/partner/institutions/${selectedInst.id}/credentials`)
+           .then(res => res.json())
+           .then(data => setInstCredentials(Array.isArray(data) ? data : []))
+           .catch(err => {
+               console.error(err);
+               setInstCredentials([]);
+           })
+           .finally(() => setLoadingCreds(false));
+    } else {
+        setInstCredentials([]);
+    }
+  }, [selectedInst, baseUrl]);
+
   async function handleUpdateCredits(id, amount) {
       if (!service.updateInstitutionCredits) return;
       try {
@@ -398,6 +417,38 @@ export default function Institutions() {
                   +{creditsAmount}
                 </button>
               </div>
+            </div>
+
+            {/* Credentials List */}
+            <div className="space-y-3">
+               <h4 className="text-xs font-medium text-slate-300">Últimas Credenciales ({instCredentials.length})</h4>
+               <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                  {loadingCreds ? (
+                      <div className="text-center py-4 text-xs text-slate-500">Cargando datos...</div>
+                  ) : instCredentials.length > 0 ? (
+                      instCredentials.map(cred => (
+                        <div key={cred.id} className="rounded-lg border border-slate-800 bg-slate-900/30 p-2.5 hover:bg-slate-900/50 transition">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="text-xs font-medium text-slate-200">{cred.studentName}</div>
+                                    <div className="text-[10px] text-slate-500">{cred.program}</div>
+                                </div>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${cred.status === 'verified' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                    {cred.status}
+                                </span>
+                            </div>
+                            <div className="mt-2 flex justify-between items-end">
+                                <div className="font-mono text-[9px] text-slate-600">{cred.studentId}</div>
+                                <div className="text-[9px] text-slate-500">{new Date(cred.issuedAt).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                      ))
+                  ) : (
+                      <div className="text-center py-6 border border-dashed border-slate-800 rounded-lg">
+                          <p className="text-xs text-slate-500">Sin emisiones registradas</p>
+                      </div>
+                  )}
+               </div>
             </div>
 
             {/* Panic Button */}

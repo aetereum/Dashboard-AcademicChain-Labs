@@ -131,7 +131,14 @@ const db = {
     }
   ],
   apiKeys: [],
-  logs: []
+  logs: [],
+  credentials: [
+    { id: "cred-1", studentName: "Juan Pérez", studentId: "A001", institutionId: "inst-1", program: "Ing. Software", status: "verified", issuedAt: "2023-01-15T10:00:00Z" },
+    { id: "cred-2", studentName: "Maria García", studentId: "A002", institutionId: "inst-1", program: "Lic. Derecho", status: "verified", issuedAt: "2023-02-20T14:30:00Z" },
+    { id: "cred-3", studentName: "Carlos López", studentId: "B005", institutionId: "inst-2", program: "MBA", status: "revoked", issuedAt: "2023-03-10T09:15:00Z" },
+    { id: "cred-4", studentName: "Ana Torres", studentId: "C101", institutionId: "inst-3", program: "Diseño Gráfico", status: "verified", issuedAt: "2023-04-05T16:45:00Z" },
+    { id: "cred-5", studentName: "Luis Diaz", studentId: "A003", institutionId: "inst-1", program: "Ing. Sistemas", status: "verified", issuedAt: "2023-05-12T11:20:00Z" },
+  ]
 };
 
 // Pre-cargar API Keys proporcionadas por el usuario
@@ -497,6 +504,15 @@ app.post('/api/validate', (req, res) => {
   db.logs.push(failedLog);
 
   res.json({ valid: false });
+});
+
+// Credentials per Institution
+app.get('/partner/institutions/:id/credentials', (req, res) => {
+  const { id } = req.params;
+  const creds = (db.credentials || []).filter(c => c.institutionId === id);
+  // Sort by date desc
+  creds.sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt));
+  res.json(creds);
 });
 
 app.listen(PORT, () => {
