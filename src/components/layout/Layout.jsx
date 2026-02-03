@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { BarChart3, KeyRound, School, ActivitySquare, ShieldCheck, FileText, PieChart, Wallet } from "lucide-react";
+import { BarChart3, KeyRound, School, ActivitySquare, ShieldCheck, FileText, PieChart, Wallet, Coins } from "lucide-react";
 import { useApi } from "../../state/ApiContext.jsx";
 import ToastHost from "../feedback/ToastHost.jsx";
 

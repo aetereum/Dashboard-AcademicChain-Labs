@@ -9,6 +9,7 @@ import Verification from "./pages/Verification.jsx";
 import AuditLogs from "./pages/AuditLogs.jsx";
 import Metrics from "./pages/Metrics.jsx";
 import Wallet from "./pages/Wallet.jsx";
+import CryptoWallet from "./pages/CryptoWallet.jsx";
 import Layout from "./components/layout/Layout.jsx";
 
 function PrivateRoute({ children }) {

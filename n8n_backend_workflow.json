@@ -1,0 +1,178 @@
+{
+  "name": "AcademicChain Backend Mock",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/",
+        "responseMode": "onReceived",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "webhookId": "academic-chain-backend"
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.query.route || $json.body.route }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "/dashboard/overview",
+              "output": 0
+            },
+            {
+              "value2": "/partner/institutions",
+              "output": 1
+            },
+            {
+              "value2": "/dashboard/wallet",
+              "output": 2
+            },
+            {
+              "operation": "contains",
+              "value2": "credentials",
+              "output": 3
+            },
+            {
+              "value2": "/partner/crypto/transactions",
+              "output": 4
+            }
+          ]
+        },
+        "fallbackOutput": 5
+      },
+      "id": "router-node",
+      "name": "Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    totalEmissions: 1250,\n    activeInstitutions: 12,\n    revokedCredentials: 5,\n    recentActivity: [\n      { id: 1, action: \"Emisión\", details: \"Credencial #123\", time: \"2h ago\" },\n      { id: 2, action: \"Verificación\", details: \"Credencial #456\", time: \"5h ago\" }\n    ]\n  }\n}];"
+      },
+      "id": "mock-dashboard",
+      "name": "Mock Dashboard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: [\n    {\n      id: \"inst-1\",\n      name: \"Universidad Nacional\",\n      status: \"active\",\n      credits: 500,\n      email: \"contacto@una.edu\",\n      joinedAt: \"2023-01-15\",\n      emissions: 150,\n      verifications: 45,\n      revocations: 2\n    },\n    {\n      id: \"inst-2\",\n      name: \"Instituto Tecnológico\",\n      status: \"active\",\n      credits: 50,\n      email: \"admin@tec.edu\",\n      joinedAt: \"2023-02-10\",\n      emissions: 30,\n      verifications: 10,\n      revocations: 0\n    }\n  ]\n}];"
+      },
+      "id": "mock-institutions",
+      "name": "Mock Institutions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    balance: 12500.45,\n    transactions: [\n      {\n        id: \"tx-1\",\n        type: \"credit\",\n        amount: 5000,\n        date: \"2023-10-24T09:15:00Z\",\n        label: \"Fondeo Inicial\",\n        txId: \"0.0.12345@169820\"\n      },\n      {\n        id: \"tx-2\",\n        type: \"debit\",\n        amount: 50,\n        date: \"2023-10-25T14:30:00Z\",\n        label: \"Recarga Gas\",\n        txId: \"0.0.34567@169824\"\n      }\n    ]\n  }\n}];"
+      },
+      "id": "mock-wallet",
+      "name": "Mock Wallet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract ID from route: /partner/institutions/inst-1/credentials\nconst route = $input.item.json.query.route;\nconst parts = route.split('/');\n// parts[0]='', [1]='partner', [2]='institutions', [3]='inst-1', [4]='credentials'\nconst instId = parts[3];\n\nconst allCreds = [\n  { id: \"c1\", institutionId: \"inst-1\", studentName: \"Juan Perez\", program: \"Ingeniería\", status: \"verified\", issuedAt: \"2023-01-01\" },\n  { id: \"c2\", institutionId: \"inst-1\", studentName: \"Maria Lopez\", program: \"Derecho\", status: \"verified\", issuedAt: \"2023-02-01\" },\n  { id: \"c3\", institutionId: \"inst-2\", studentName: \"Carlos Ruiz\", program: \"Medicina\", status: \"revoked\", issuedAt: \"2023-03-01\" }\n];\n\nreturn [{\n  json: allCreds.filter(c => c.institutionId === instId)\n}];"
+      },
+      "id": "mock-credentials",
+      "name": "Mock Credentials",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 700]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: [\n    {\n      id: \"ctx-1\",\n      description: \"Pago Mensualidad\",\n      type: \"deposit\",\n      amount: 100,\n      transactionId: \"0.0.99999\",\n      timestamp: new Date().toISOString()\n    },\n    {\n      id: \"ctx-2\",\n      description: \"Compra Token\",\n      type: \"withdrawal\",\n      amount: 50,\n      transactionId: \"0.0.88888\",\n      timestamp: new Date(Date.now() - 86400000).toISOString()\n    }\n  ]\n}];"
+      },
+      "id": "mock-crypto",
+      "name": "Mock Crypto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 900]
+    },
+    {
+      "parameters": {
+        "content": "{\n  \"error\": \"Route not found\",\n  \"route\": \"{{ $json.query.route || $json.body.route }}\"\n}",
+        "contentType": "json",
+        "responseCode": 404
+      },
+      "id": "not-found",
+      "name": "404 Not Found",
+      "type": "n8n-nodes-base.respond-to-webhook",
+      "typeVersion": 1,
+      "position": [680, 800]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Mock Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock Institutions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock Wallet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock Credentials",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "404 Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
