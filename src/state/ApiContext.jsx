@@ -27,22 +27,21 @@ export function ApiProvider({ children }) {
       if (!service) return;
       setIsSessionChecking(true);
       try {
-        // Intentamos acceder a un endpoint protegido o de checkeo
-        // Como no tenemos el método 'checkAuth' en service, usaremos fetch directo o asumiremos
-        // que si getOverview falla es por auth.
-        // Pero mejor implementamos un check directo.
-        const res = await fetch(`${baseUrl}/api/auth/check`, { credentials: 'include' });
-        if (res.ok) {
-           setApiKey("admin-session-active");
-        } else {
-           setApiKey(null);
-           localStorage.removeItem("ac_api_key");
-        }
+        // En n8n no tenemos un endpoint /api/auth/check por defecto.
+        // Asumiremos sesión válida si hay apiKey almacenada, 
+        // o podemos hacer una llamada simple a /logs o similar si queremos verificar.
+        // Por ahora, para evitar bloqueos por CORS o rutas inexistentes en n8n:
+        // Si hay baseUrl y apiKey, lo damos por válido.
+        // TODO: Implementar un endpoint real de "ping" en n8n.
+        
+        // Simulación de check exitoso para no bloquear al usuario
+        // setApiKey("admin-session-active"); 
+        
+        // Opcional: Intentar un fetch real si es necesario, pero con timeout corto
+        // const res = await fetch(`${baseUrl}?route=/auth/check`, { ... });
       } catch (e) {
-        // Si falla conexión, asumimos no auth o error red
-        // No borramos apiKey si es error de red? 
-        // Para seguridad, mejor pedir login.
-        setApiKey(null); 
+        // Ignorar errores de red en checkeo inicial para no desloguear agresivamente
+        console.warn("Session check warning:", e);
       } finally {
         setIsSessionChecking(false);
       }
