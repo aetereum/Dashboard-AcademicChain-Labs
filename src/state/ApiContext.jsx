@@ -11,7 +11,7 @@ export function ApiProvider({ children }) {
     () =>
       localStorage.getItem("ac_base_url") ||
       import.meta.env.VITE_API_BASE_URL ||
-      "https://dashboard-academicchain-labs.onrender.com"
+      "https://n8n-b0be.onrender.com/webhook/academic-api"
   );
   const [activeInstitution, setActiveInstitution] = useState(null);
   const [isSessionChecking, setIsSessionChecking] = useState(true);

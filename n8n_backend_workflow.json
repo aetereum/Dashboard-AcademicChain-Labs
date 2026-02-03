@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "path": "/",
+        "path": "academic-api",
         "responseMode": "onReceived",
         "options": {
           "allowedOrigins": "*"
