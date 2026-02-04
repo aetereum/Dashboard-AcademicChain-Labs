@@ -50,6 +50,11 @@
             },
             {
               "operation": "contains",
+              "value2": "/api/health",
+              "output": 5
+            },
+            {
+              "operation": "contains",
               "value2": "key",
               "output": 6
             },

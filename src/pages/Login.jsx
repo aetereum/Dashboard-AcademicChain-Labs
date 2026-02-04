@@ -16,7 +16,8 @@ export default function Login() {
   const checkConnection = async (url) => {
     setConnectionStatus('checking');
     try {
-      const res = await fetch(`${url.replace(/\/$/, "")}/api/health`);
+      // Usar ?route= para compatibilidad con n8n
+      const res = await fetch(`${url.replace(/\/$/, "")}?route=/api/health`);
       if (res.ok) {
         setConnectionStatus('connected');
       } else {

@@ -24,9 +24,10 @@ export function ApiProvider({ children }) {
   // Check session on mount
   useEffect(() => {
     async function checkSession() {
-      if (!service) return;
       setIsSessionChecking(true);
       try {
+        if (!service) throw new Error("No service initialized");
+
         // En n8n no tenemos un endpoint /api/auth/check por defecto.
         // Asumiremos sesión válida si hay apiKey almacenada, 
         // o podemos hacer una llamada simple a /logs o similar si queremos verificar.
