@@ -114,6 +114,7 @@ export function buildDashboardService({ baseUrl, apiKey }) {
   return {
     getOverview,
     getInstitutions,
+    createInstitution,
     getApiKeys,
     createApiKey,
     createApiKeyForInstitution,
